@@ -19,6 +19,9 @@ The idea is to have multiple instances of the same ASP.NET server interface with
 - Using gRPC instead of HTTP api calls
 - Service discovery (as an automatic way of creating a list of instances)
 - Authorization and Authentication
+- Use of a database to save tasks and their progress
+  - Also used to schedule tasks
+- Implement queues for better concurrency
 
 ### Usage
 
