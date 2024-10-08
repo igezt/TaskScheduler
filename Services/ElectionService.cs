@@ -30,21 +30,38 @@ namespace TaskScheduler.Services
 
         
         
-        public bool IsSelfLeader() {
+        public async Task<bool> IsSelfLeader() {
+            if (leaderId == -1) {
+                await InitLeader();
+            }
             return leaderId == _id;
         }
 
         public async Task<bool> PollLeaderAsync() {
-            return await PollNodeAsync(leaderId);
+            if (leaderId == -1) {
+                await InitLeader();
+            }
+            var isLeaderOnline = await PollNodeAsync(leaderId);
+            if (!isLeaderOnline) {
+                ReElectLeader();
+            }
+            return isLeaderOnline;
         }
 
-        public async Task<bool> RequestIdFromNodes() {
+        /**
+        *   Called to poll all nodes to flood their ids to one another to re-elect a leader.
+        */
+        private async Task<bool> InitLeader() {
+            leaderId = _id;
             foreach (var kvPair in instances) {
                 await SignalToFloodId(kvPair.Key);
             }
             return true;
         }
 
+        /**
+        *   Floods the current node's id to all other nodes.
+        */
         public async Task<bool> FloodId() {
             foreach(var kvPair in instances) {
                 await FloodIdToNode(kvPair.Key);
@@ -52,14 +69,19 @@ namespace TaskScheduler.Services
             return true;
         }
 
-        public async void ElectLeader() {
-            leaderId = -1;
-            await FloodId();
-        }
+        /**
+        *   Re-elects a leader by flooding the current node's id to all other nodes. To be called when the leader node is offline.
+        */
+        
 
         public void UpdateLeaderId(int id) {
             _logger.LogInformation("New id found: {int}", id);
             leaderId = int.Max(id, leaderId);
+        }
+
+        private async void ReElectLeader() {
+            leaderId = -1;
+            await FloodId();
         }
 
         private async Task<bool> PollNodeAsync(int id) {

@@ -24,7 +24,6 @@ public class ScheduledJobService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // _logger.LogInformation("Starting scheduled job.");
-        await _leaderService.RequestIdFromNodes();
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("{string} Scheduled job running at: {time}", 
@@ -32,7 +31,7 @@ public class ScheduledJobService : BackgroundService
             );
 
 
-            var isLeader = _leaderService.IsSelfLeader();
+            var isLeader = await _leaderService.IsSelfLeader();
 
             if (isLeader) {
                 _logger.LogInformation("I am the leader");
@@ -41,7 +40,7 @@ public class ScheduledJobService : BackgroundService
                 if (isLeaderOnline) {
                     _logger.LogInformation("Leader is online.");
                 } else {
-                    _leaderService.ElectLeader();
+                    _logger.LogInformation("Re-electing leader.");
                 }
             }
             
