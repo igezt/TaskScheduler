@@ -13,9 +13,11 @@ namespace TaskScheduler.Services
         private readonly Dictionary<int, string> instances;
         private readonly ILogger<ElectionService> _logger;
 
+        private readonly ConsulService _consulService;
+
         private readonly HttpClient _httpClient;
 
-        public ElectionService(HttpClient httpClient, ILogger<ElectionService> logger) {
+        public ElectionService(HttpClient httpClient, ILogger<ElectionService> logger, ConsulService consulService) {
             instances = new Dictionary<int, string>
                 {
                     [1] = "5001",
@@ -25,7 +27,8 @@ namespace TaskScheduler.Services
             _logger = logger;
             _httpClient = httpClient;
             _id = int.Parse(Environment.GetEnvironmentVariable("LAUNCH_PROFILE"));
-            leaderId = -1;       
+            leaderId = -1;     
+            _consulService = consulService;  
         }
 
         
@@ -34,6 +37,7 @@ namespace TaskScheduler.Services
             if (leaderId == -1) {
                 await InitLeader();
             }
+            _logger.LogInformation("Ids: " + string.Join(" ", await _consulService.GetIds()));
             return leaderId == _id;
         }
 

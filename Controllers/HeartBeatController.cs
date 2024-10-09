@@ -9,9 +9,9 @@ namespace TaskScheduler.Controllers
     {
         // GET: api/<HeartBeatController>
         [HttpGet]
-        public int Get()
+        public Microsoft.AspNetCore.Http.IResult Get()
         {
-            return 1;
+            return Results.Ok(1);
         }
 
         // GET api/<HeartBeatController>/5

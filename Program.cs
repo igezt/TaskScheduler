@@ -1,14 +1,28 @@
+using Consul;
 using TaskScheduler.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddHostedService<ScheduledJobService>();
+
+builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient(consulConfig =>
+{
+    // Replace with the appropriate Consul address
+    consulConfig.Address = new Uri("http://localhost:8500");
+}));
+
+builder.Services.AddSingleton<ConsulService>();
 builder.Services.AddSingleton<ElectionService>();
+builder.Services.AddHostedService<ScheduledJobService>();
+
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
+
+// Registers the node with Consul.
+var consulService = app.Services.GetRequiredService<ConsulService>();
+await consulService.RegisterService();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -23,19 +37,7 @@ app.UseAuthorization();
 // Map controller routes
 app.MapControllers();
 
-app.Run();
+var port = int.Parse(Environment.GetEnvironmentVariable("PORT"));
 
-// app.MapGet("/weatherforecast", () =>
-// {
-//     var forecast =  Enumerable.Range(1, 5).Select(index =>
-//         new WeatherForecast
-//         (
-//             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//             Random.Shared.Next(-20, 55),
-//             summaries[Random.Shared.Next(summaries.Length)]
-//         ))
-//         .ToArray();
-//     return forecast;
-// })
-// .WithName("GetWeatherForecast")
-// .WithOpenApi();
+app.Run($"http://localhost:{port}");
+

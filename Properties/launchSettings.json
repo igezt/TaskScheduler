@@ -43,6 +43,7 @@
       "applicationUrl": "http://localhost:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "5001",
         "LAUNCH_PROFILE": "1"
       }
     },
@@ -52,6 +53,7 @@
       "applicationUrl": "http://localhost:5002",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "5002",
         "LAUNCH_PROFILE": "2"
       }
     },
@@ -61,6 +63,7 @@
       "applicationUrl": "http://localhost:5003",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "5003",
         "LAUNCH_PROFILE": "3"
       }
     }
