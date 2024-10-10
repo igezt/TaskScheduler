@@ -15,7 +15,7 @@ namespace TaskScheduler.Services
         private readonly string? _id;
         private readonly int _port;
 
-        private readonly string _host = "localhost";
+        private readonly string _host = "host.docker.internal";
 
         public ConsulService(IConsulClient consulClient, ILogger<ConsulService> logger) {
             instances = [];
@@ -32,9 +32,11 @@ namespace TaskScheduler.Services
         private readonly string serviceName = "TaskSchedulerNode";
 
         public async Task<List<string>> GetIds() {
-            // var services = await _consulClient.Agent.Services();
-            var healthyServices = await _consulClient.Health.Service(serviceName, null, passingOnly: true);
+            var services = await _consulClient.Agent.Services();
+            var allServiceIds = services.Response.Values.Select(s => s.ID).ToList();
+            _logger.LogInformation("All services: " + string.Join(" ", allServiceIds));
 
+            var healthyServices = await _consulClient.Health.Service(serviceName, null, passingOnly: true);
             // Extract the service IDs from the response
             var serviceIds = healthyServices.Response.Select(s => s.Service.ID).ToList();
 
@@ -42,6 +44,7 @@ namespace TaskScheduler.Services
         }
 
         public async Task RegisterService() {
+            // var heartbeatUrl = $"http://localhost:5001/api/heartbeat";
             var heartbeatUrl = $"http://{_host}:{_port}/api/heartbeat";
             var registration = new AgentServiceRegistration
             {
@@ -54,11 +57,18 @@ namespace TaskScheduler.Services
                         HTTP = heartbeatUrl,
                         Interval = TimeSpan.FromSeconds(10),
                         Timeout = TimeSpan.FromSeconds(5)
-                    }
+                    },
+                Tags = [$"Node {_id}",]
+
             };
 
             await _consulClient.Agent.ServiceRegister(registration);
             _logger.LogInformation("{string} registered with Consul on {string}:{int}. Heartbeat url: {string}", serviceName, _host, _port, heartbeatUrl);
+        }
+        public async Task DeregisterService()
+        {
+            await _consulClient.Agent.ServiceDeregister(_id);
+            _logger.LogInformation("Service {int} deregistered from Consul", _id);
         }
     }
 }
