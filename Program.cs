@@ -22,8 +22,6 @@ var app = builder.Build();
 
 // Registers the node with Consul.
 var consulService = app.Services.GetRequiredService<ConsulService>();
-await consulService.DeregisterService();
-await consulService.RegisterService();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

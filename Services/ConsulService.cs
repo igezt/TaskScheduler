@@ -15,7 +15,8 @@ namespace TaskScheduler.Services
         private readonly string? _id;
         private readonly int _port;
 
-        private readonly string _host = "host.docker.internal";
+        private readonly string _host = "localhost";
+        private readonly string _serviceName = "TaskSchedulerNode";
 
         public ConsulService(IConsulClient consulClient, ILogger<ConsulService> logger) {
             instances = [];
@@ -29,46 +30,75 @@ namespace TaskScheduler.Services
             if (!string.IsNullOrEmpty(port)) _port = int.Parse(port);
         }
 
-        private readonly string serviceName = "TaskSchedulerNode";
 
-        public async Task<List<string>> GetIds() {
+        public async Task<List<int>> GetHealthyIds() {
             var services = await _consulClient.Agent.Services();
             var allServiceIds = services.Response.Values.Select(s => s.ID).ToList();
-            _logger.LogInformation("All services: " + string.Join(" ", allServiceIds));
+            _logger.LogInformation("All services: {string}", string.Join(" ", allServiceIds));
 
-            var healthyServices = await _consulClient.Health.Service(serviceName, null, passingOnly: true);
+            var healthyServices = await _consulClient.Health.Service(_serviceName, null, passingOnly: true);
             // Extract the service IDs from the response
-            var serviceIds = healthyServices.Response.Select(s => s.Service.ID).ToList();
+            var serviceIds = healthyServices.Response.Select(s => int.Parse(s.Service.ID)).ToList();
 
             return serviceIds;
         }
 
-        public async Task RegisterService() {
+        public async Task<string> GetServiceAddress(int id) {
+            // Fetch all registered services
+            var services = await _consulClient.Agent.Services();
+
+            // Find the service with the matching ID
+            var service = services.Response.Values.FirstOrDefault(s => s.ID == id.ToString());
+
+            // If service is found, return its address and port
+            if (service != null)
+            {
+                return $"http://{_host}:{service.Port}";
+            }
+            else
+            {
+                throw new Exception("No service with this id was found.");
+            }
+        }
+
+        public async Task RegisterNode() {
             // var heartbeatUrl = $"http://localhost:5001/api/heartbeat";
-            var heartbeatUrl = $"http://{_host}:{_port}/api/heartbeat";
+            var heartbeatUrl = $"http://host.docker.internal:{_port}/api/heartbeat";
             var registration = new AgentServiceRegistration
             {
                 ID = _id,
-                Name = serviceName,
+                Name = _serviceName,
                 Address = _host,
                 Port = _port,
                 Check = new AgentServiceCheck()
                     {
                         HTTP = heartbeatUrl,
-                        Interval = TimeSpan.FromSeconds(10),
+                        Interval = TimeSpan.FromSeconds(0.5),
                         Timeout = TimeSpan.FromSeconds(5)
                     },
                 Tags = [$"Node {_id}",]
-
             };
 
             await _consulClient.Agent.ServiceRegister(registration);
-            _logger.LogInformation("{string} registered with Consul on {string}:{int}. Heartbeat url: {string}", serviceName, _host, _port, heartbeatUrl);
+            _logger.LogInformation("{string} registered with Consul on {string}:{int}. Heartbeat url: {string}", _serviceName, _host, _port, heartbeatUrl);
         }
-        public async Task DeregisterService()
+        public async Task DeregisterNode()
         {
             await _consulClient.Agent.ServiceDeregister(_id);
             _logger.LogInformation("Service {int} deregistered from Consul", _id);
         }
+
+        public async Task<bool> IsNodeHealthy() {
+            var healthyNodeIds = await GetHealthyIds();
+            var isHealthy = healthyNodeIds.Any(nodeId => nodeId == int.Parse(_id));
+            // Return the node name, or null if not found
+            _logger.LogWarning("isHealthy: {bool}", isHealthy);
+
+            return isHealthy;
+        }
+
+        
+
+        
     }
 }

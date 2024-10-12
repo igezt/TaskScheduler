@@ -9,21 +9,24 @@ public class ScheduledJobService : BackgroundService
 {
     private readonly ILogger<ScheduledJobService> _logger;
     private readonly HttpClient _httpClient;
-    private readonly ElectionService _leaderService;
+    private readonly ElectionService _electionService;
 
+    private readonly ConsulService _consulService;
     private readonly int id;
 
 
-    public ScheduledJobService(ILogger<ScheduledJobService> logger, HttpClient httpClient, ElectionService leaderService)
+    public ScheduledJobService(ILogger<ScheduledJobService> logger, HttpClient httpClient, ElectionService electionService, ConsulService consulService)
     {
         _logger = logger;
         _httpClient = httpClient;
-        _leaderService = leaderService;        
+        _electionService = electionService;     
+        _consulService = consulService;   
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // _logger.LogInformation("Starting scheduled job.");
+        await _electionService.BlockingRegistration();
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("{string} Scheduled job running at: {time}", 
@@ -31,12 +34,12 @@ public class ScheduledJobService : BackgroundService
             );
 
 
-            var isLeader = await _leaderService.IsSelfLeader();
+            var isLeader = await _electionService.IsSelfLeader();
 
             if (isLeader) {
                 _logger.LogInformation("I am the leader");
             } else {
-                var isLeaderOnline = await _leaderService.PollLeaderAsync();
+                var isLeaderOnline = await _electionService.PollLeaderAsync();
                 if (isLeaderOnline) {
                     _logger.LogInformation("Leader is online.");
                 } else {
