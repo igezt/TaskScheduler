@@ -18,6 +18,7 @@ namespace TaskScheduler.Services
         private readonly HttpClient _httpClient;
 
         public ElectionService(HttpClient httpClient, ILogger<ElectionService> logger, IDiscoveryService discoveryService) {
+        private readonly string _fromSammy = "iloveuuuuu";
             _logger = logger;
             _httpClient = httpClient;
             
