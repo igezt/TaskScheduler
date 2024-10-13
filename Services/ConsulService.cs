@@ -60,8 +60,7 @@ namespace TaskScheduler.Services
             }
         }
 
-        public async Task RegisterNode() {
-            // var heartbeatUrl = $"http://localhost:5001/api/heartbeat";
+        public async Task<bool> RegisterNode() {
             var heartbeatUrl = $"http://host.docker.internal:{_port}/api/heartbeat";
             var registration = new AgentServiceRegistration
             {

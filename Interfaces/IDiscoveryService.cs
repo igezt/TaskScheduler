@@ -11,7 +11,7 @@ namespace TaskScheduler.Interfaces
     
         Task<string> GetServiceAddress(int id);
 
-        Task RegisterNode();
+        Task<bool> RegisterNode();
 
         Task DeregisterNode();
 
