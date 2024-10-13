@@ -35,12 +35,12 @@ public class ScheduledJobService : BackgroundService
 
             if (isLeader) {
                 _logger.LogInformation("I am the leader");
+                // TODO: Produce tasks to Kafka
             } else {
-                var isLeaderOnline = await _electionService.PollLeaderAsync();
+                var isLeaderOnline = await _electionService.PollOrReElectLeaderAsync();
                 if (isLeaderOnline) {
                     _logger.LogInformation("Leader is online.");
-                } else {
-                    _logger.LogInformation("Re-electing leader.");
+                    // TODO: Receive tasks from Kafka
                 }
             }
             

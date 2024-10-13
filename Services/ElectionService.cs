@@ -39,11 +39,11 @@ namespace TaskScheduler.Services
                 await BlockingRegistration();
                 await InitLeader();
             }
-            _logger.LogInformation("Ids: " + string.Join(" ", await _discoveryService.GetHealthyIds()));
+            _logger.LogInformation("Healthy node ids: {string}", string.Join(" ", await _discoveryService.GetHealthyIds()));
             return leaderId == _id;
         }
 
-        public async Task<bool> PollLeaderAsync() {
+        public async Task<bool> PollOrReElectLeaderAsync() {
             if (leaderId == -1) {
                 await BlockingRegistration();
                 await InitLeader();

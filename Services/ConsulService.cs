@@ -32,8 +32,6 @@ namespace TaskScheduler.Services
 
         public async Task<List<int>> GetHealthyIds() {
             var services = await _consulClient.Agent.Services();
-            var allServiceIds = services.Response.Values.Select(s => s.ID).ToList();
-            _logger.LogInformation("All services: {string}", string.Join(" ", allServiceIds));
 
             var healthyServices = await _consulClient.Health.Service(_serviceName, null, passingOnly: true);
             // Extract the service IDs from the response
