@@ -1,6 +1,7 @@
 using Consul;
 using TaskScheduler.Interfaces;
 using TaskScheduler.Services;
+using TaskScheduler.Strategy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
     consulConfig.Address = new Uri("http://localhost:8500");
 }));
 
+builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
 builder.Services.AddSingleton<IDiscoveryService, ConsulService>();
 builder.Services.AddSingleton<ElectionService>();
 builder.Services.AddHostedService<ScheduledJobService>();

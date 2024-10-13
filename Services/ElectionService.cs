@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TaskScheduler.Interfaces;
+using TaskScheduler.Strategy;
 
 namespace TaskScheduler.Services
 {
@@ -17,28 +18,25 @@ namespace TaskScheduler.Services
 
         private readonly HttpClient _httpClient;
 
-        public ElectionService(HttpClient httpClient, ILogger<ElectionService> logger, IDiscoveryService discoveryService) {
+        private readonly IElectionStrategy _electionStrategy;
+
         private readonly string _fromSammy = "iloveuuuuu";
+
+        public ElectionService(HttpClient httpClient, ILogger<ElectionService> logger, IDiscoveryService discoveryService, IElectionStrategy electionStrategy) {
             _logger = logger;
             _httpClient = httpClient;
             
             _id = int.Parse(Environment.GetEnvironmentVariable("NODE_ID"));
             leaderId = -1;     
             _discoveryService = discoveryService;  
-        }
+            _electionStrategy = electionStrategy;
 
-        public async Task<bool> BlockingRegistration() {
-            await _discoveryService.RegisterNode();
-            // TODO: Remove busy waiting.
-            while (! await _discoveryService.IsNodeHealthy()) {
-                _logger.LogWarning("Node is currently not registered as healthy in Consul");
-                await Task.Delay(TimeSpan.FromSeconds(1));
-            }
-            return true;
         }
+        
         
         public async Task<bool> IsSelfLeader() {
             if (leaderId == -1) {
+                await BlockingRegistration();
                 await InitLeader();
             }
             _logger.LogInformation("Ids: " + string.Join(" ", await _discoveryService.GetHealthyIds()));
@@ -47,6 +45,7 @@ namespace TaskScheduler.Services
 
         public async Task<bool> PollLeaderAsync() {
             if (leaderId == -1) {
+                await BlockingRegistration();
                 await InitLeader();
             }
             var isLeaderOnline = await PollNodeAsync(leaderId);
@@ -69,6 +68,19 @@ namespace TaskScheduler.Services
             return true;
         }
 
+        private async Task<bool> BlockingRegistration() {
+            while (!await _discoveryService.RegisterNode()) {
+                _logger.LogError("Node is not able to connect to Consul. Re-attempting in 5 seconds.");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+            // TODO: Remove busy waiting.
+            while (! await _discoveryService.IsNodeHealthy()) {
+                _logger.LogWarning("Node is currently not registered as healthy in Consul");
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+            return true;
+        }
+
         /**
         *   Floods the current node's id to all other nodes.
         */
@@ -86,7 +98,7 @@ namespace TaskScheduler.Services
         */
         public void UpdateLeaderId(int id) {
             _logger.LogInformation("New id found: {int}", id);
-            leaderId = int.Max(id, leaderId);
+            leaderId = _electionStrategy.ElectLeader(leaderId, id);
         }
 
         private async void ReElectLeader() {

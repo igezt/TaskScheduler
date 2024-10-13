@@ -77,9 +77,13 @@ namespace TaskScheduler.Services
                     },
                 Tags = [$"Node {_id}",]
             };
-
-            await _consulClient.Agent.ServiceRegister(registration);
-            _logger.LogInformation("{string} registered with Consul on {string}:{int}. Heartbeat url: {string}", _serviceName, _host, _port, heartbeatUrl);
+            try {
+                await _consulClient.Agent.ServiceRegister(registration);
+                _logger.LogInformation("{string} registered with Consul on {string}:{int}. Heartbeat url: {string}", _serviceName, _host, _port, heartbeatUrl);
+                return true;
+            } catch (HttpRequestException ex) when (ex.Message.Contains("Connection refused")) {
+                return false;
+            }
         }
         public async Task DeregisterNode()
         {

@@ -24,7 +24,6 @@ public class ScheduledJobService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // _logger.LogInformation("Starting scheduled job.");
-        await _electionService.BlockingRegistration();
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("{string} Scheduled job running at: {time}", 
