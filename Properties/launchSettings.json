@@ -37,6 +37,13 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
+    "node": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
     "node1": {
       "commandName": "Project",
       "dotnetRunMessages": true,
@@ -44,27 +51,25 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "PORT": "5001",
-        "LAUNCH_PROFILE": "1"
+        "NODE_ID": "1"
       }
     },
     "node2": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5002",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "PORT": "5002",
-        "LAUNCH_PROFILE": "2"
+        "NODE_ID": "2"
       }
     },
     "node3": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5003",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "PORT": "5003",
-        "LAUNCH_PROFILE": "3"
+        "NODE_ID": "3"
       }
     }
   }

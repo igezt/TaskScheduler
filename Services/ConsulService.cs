@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Consul;
+using TaskScheduler.Interfaces;
 
 namespace TaskScheduler.Services
 {
-    public class ConsulService
+    public class ConsulService : IDiscoveryService 
     {
-        private readonly Dictionary<int, string> instances = [];
         private readonly IConsulClient _consulClient;
         private readonly ILogger<ConsulService> _logger;
 
@@ -19,11 +19,10 @@ namespace TaskScheduler.Services
         private readonly string _serviceName = "TaskSchedulerNode";
 
         public ConsulService(IConsulClient consulClient, ILogger<ConsulService> logger) {
-            instances = [];
             _consulClient = consulClient;
             _logger = logger;
 
-            var id = Environment.GetEnvironmentVariable("LAUNCH_PROFILE");
+            var id = Environment.GetEnvironmentVariable("NODE_ID");
             if (!string.IsNullOrEmpty(id)) _id = id;
 
             var port = Environment.GetEnvironmentVariable("PORT");

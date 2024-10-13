@@ -11,16 +11,14 @@ public class ScheduledJobService : BackgroundService
     private readonly HttpClient _httpClient;
     private readonly ElectionService _electionService;
 
-    private readonly ConsulService _consulService;
     private readonly int id;
 
 
-    public ScheduledJobService(ILogger<ScheduledJobService> logger, HttpClient httpClient, ElectionService electionService, ConsulService consulService)
+    public ScheduledJobService(ILogger<ScheduledJobService> logger, HttpClient httpClient, ElectionService electionService)
     {
         _logger = logger;
         _httpClient = httpClient;
         _electionService = electionService;     
-        _consulService = consulService;   
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,7 +28,7 @@ public class ScheduledJobService : BackgroundService
         while (!stoppingToken.IsCancellationRequested)
         {
             _logger.LogInformation("{string} Scheduled job running at: {time}", 
-                Environment.GetEnvironmentVariable("LAUNCH_PROFILE"), DateTimeOffset.Now
+                Environment.GetEnvironmentVariable("NODE_ID"), DateTimeOffset.Now
             );
 
 

@@ -1,4 +1,5 @@
 using Consul;
+using TaskScheduler.Interfaces;
 using TaskScheduler.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,16 +13,13 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
     consulConfig.Address = new Uri("http://localhost:8500");
 }));
 
-builder.Services.AddSingleton<ConsulService>();
+builder.Services.AddSingleton<IDiscoveryService, ConsulService>();
 builder.Services.AddSingleton<ElectionService>();
 builder.Services.AddHostedService<ScheduledJobService>();
 
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
-
-// Registers the node with Consul.
-var consulService = app.Services.GetRequiredService<ConsulService>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
