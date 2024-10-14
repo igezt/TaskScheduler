@@ -39,4 +39,3 @@ app.MapControllers();
 var port = int.Parse(Environment.GetEnvironmentVariable("PORT"));
 
 app.Run($"http://localhost:{port}");
-

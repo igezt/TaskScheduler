@@ -11,7 +11,8 @@ namespace MyApp.Namespace
         private readonly ElectionService _leaderService;
         private readonly ILogger<LeaderController> _logger;
 
-        public LeaderController(ElectionService leaderService, ILogger<LeaderController> logger) {
+        public LeaderController(ElectionService leaderService, ILogger<LeaderController> logger)
+        {
             _leaderService = leaderService;
             _logger = logger;
         }
@@ -21,7 +22,8 @@ namespace MyApp.Namespace
         public async void Get()
         {
             _logger.LogWarning("Request to execute leader election received.");
-            await _leaderService.FloodId();;
+            await _leaderService.FloodId();
+            ;
         }
 
         // // GET api/<LeaderController>/5

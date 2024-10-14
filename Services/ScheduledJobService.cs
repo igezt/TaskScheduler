@@ -13,12 +13,15 @@ public class ScheduledJobService : BackgroundService
 
     private readonly int id;
 
-
-    public ScheduledJobService(ILogger<ScheduledJobService> logger, HttpClient httpClient, ElectionService electionService)
+    public ScheduledJobService(
+        ILogger<ScheduledJobService> logger,
+        HttpClient httpClient,
+        ElectionService electionService
+    )
     {
         _logger = logger;
         _httpClient = httpClient;
-        _electionService = electionService;     
+        _electionService = electionService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -26,24 +29,29 @@ public class ScheduledJobService : BackgroundService
         // _logger.LogInformation("Starting scheduled job.");
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("{string} Scheduled job running at: {time}", 
-                Environment.GetEnvironmentVariable("NODE_ID"), DateTimeOffset.Now
+            _logger.LogInformation(
+                "{string} Scheduled job running at: {time}",
+                Environment.GetEnvironmentVariable("NODE_ID"),
+                DateTimeOffset.Now
             );
-
 
             var isLeader = await _electionService.IsSelfLeader();
 
-            if (isLeader) {
+            if (isLeader)
+            {
                 _logger.LogInformation("I am the leader");
                 // TODO: Produce tasks to Kafka
-            } else {
+            }
+            else
+            {
                 var isLeaderOnline = await _electionService.PollOrReElectLeaderAsync();
-                if (isLeaderOnline) {
+                if (isLeaderOnline)
+                {
                     _logger.LogInformation("Leader is online.");
                     // TODO: Receive tasks from Kafka
                 }
             }
-            
+
             // Your scheduled job logic here
             await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken); // Run every 5 seconds.
         }

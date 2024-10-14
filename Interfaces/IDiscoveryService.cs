@@ -8,7 +8,7 @@ namespace TaskScheduler.Interfaces
     public interface IDiscoveryService
     {
         Task<List<int>> GetHealthyIds();
-    
+
         Task<string> GetServiceAddress(int id);
 
         Task<bool> RegisterNode();
