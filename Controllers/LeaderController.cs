@@ -23,7 +23,6 @@ namespace MyApp.Namespace
         {
             _logger.LogWarning("Request to execute leader election received.");
             await _leaderService.FloodId();
-            ;
         }
 
         // // GET api/<LeaderController>/5

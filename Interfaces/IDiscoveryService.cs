@@ -9,7 +9,7 @@ namespace TaskScheduler.Interfaces
     {
         Task<List<int>> GetHealthyIds();
 
-        Task<string> GetServiceAddress(int id);
+        Task<string> GetNodeAddress(int nodeId);
 
         Task<bool> RegisterNode();
 

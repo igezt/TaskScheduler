@@ -1,4 +1,5 @@
 using Consul;
+using TaskScheduler.Communication;
 using TaskScheduler.Interfaces;
 using TaskScheduler.Services;
 using TaskScheduler.Strategy;
@@ -15,6 +16,7 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
 }));
 
 builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
+builder.Services.AddSingleton<INodeCommunication, HttpNodeCommunication>();
 builder.Services.AddSingleton<IDiscoveryService, ConsulService>();
 builder.Services.AddSingleton<ElectionService>();
 builder.Services.AddHostedService<ScheduledJobService>();

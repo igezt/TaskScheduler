@@ -17,35 +17,26 @@ namespace TaskScheduler.Services
 
         private readonly IDiscoveryService _discoveryService;
 
-        private readonly HttpClient _httpClient;
-
         private readonly IElectionStrategy _electionStrategy;
 
-        private readonly AsyncFallbackPolicy<bool> _fallbackPolicy;
-
+        private readonly INodeCommunication _nodeCommunication;
         private readonly string _fromSammy = "iloveuuuuu";
 
         public ElectionService(
             HttpClient httpClient,
             ILogger<ElectionService> logger,
             IDiscoveryService discoveryService,
-            IElectionStrategy electionStrategy
+            IElectionStrategy electionStrategy,
+            INodeCommunication nodeCommunication
         )
         {
             _logger = logger;
-            _httpClient = httpClient;
 
             _id = int.Parse(Environment.GetEnvironmentVariable("NODE_ID"));
             leaderId = -1;
             _discoveryService = discoveryService;
             _electionStrategy = electionStrategy;
-
-            _fallbackPolicy = Polly
-                .Policy.Handle<HttpRequestException>()
-                .OrResult<bool>(res => res) // Handle cases where the result is null (e.g., bad request)
-                .FallbackAsync(
-                    fallbackValue: false // Fallback value if exception occurs
-                );
+            _nodeCommunication = nodeCommunication;
         }
 
         public async Task<bool> IsSelfLeader()
@@ -97,13 +88,6 @@ namespace TaskScheduler.Services
 
         private async Task<bool> BlockingRegistration()
         {
-            while (!await _discoveryService.RegisterNode())
-            {
-                _logger.LogError(
-                    "Node is not able to connect to Consul. Re-attempting in 5 seconds."
-                );
-                await Task.Delay(TimeSpan.FromSeconds(5));
-            }
             await _discoveryService.RegisterNode();
             // TODO: Remove busy waiting.
             while (!await _discoveryService.IsNodeHealthy())
@@ -115,7 +99,7 @@ namespace TaskScheduler.Services
         }
 
         /**
-        *   Floods the current node's id to all other nodes.
+        *   Floods the current node's id to all other nodes, including itself.
         */
         public async Task<bool> FloodId()
         {
@@ -127,9 +111,6 @@ namespace TaskScheduler.Services
             return true;
         }
 
-        /**
-        *   Re-elects a leader by flooding the current node's id to all other nodes. To be called when the leader node is offline.
-        */
         public void UpdateLeaderId(int id)
         {
             _logger.LogInformation("New id found: {int}", id);
@@ -144,56 +125,21 @@ namespace TaskScheduler.Services
 
         private async Task<bool> PollNodeAsync(int id)
         {
-            var nodeUrl = await _discoveryService.GetServiceAddress(id);
+            var nodeUrl = await _discoveryService.GetNodeAddress(id);
 
-            return await _fallbackPolicy.ExecuteAsync(async () =>
-            {
-                var res = await _httpClient.GetAsync(nodeUrl + "/api/heartbeat");
-                if (!res.IsSuccessStatusCode)
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            });
+            return await _nodeCommunication.PollNode(nodeUrl);
         }
 
         private async Task<bool> SignalToFloodId(int id)
         {
-            var nodeUrl = await _discoveryService.GetServiceAddress(id);
-            return await _fallbackPolicy.ExecuteAsync(async () =>
-            {
-                var res = await _httpClient.GetAsync(nodeUrl + $"/api/leader");
-                if (!res.IsSuccessStatusCode)
-                {
-                    return false;
-                }
-                else
-                {
-                    // _logger.LogInformation("newLeaderId {int} is not the same leader id in node {id}", newLeaderId, id);
-                    return true;
-                }
-            });
+            var nodeUrl = await _discoveryService.GetNodeAddress(id);
+            return await _nodeCommunication.SignalToFloodId(nodeUrl);
         }
 
         private async Task<bool> FloodIdToNode(int id)
         {
-            var nodeUrl = await _discoveryService.GetServiceAddress(id);
-            return await _fallbackPolicy.ExecuteAsync(async () =>
-            {
-                var res = await _httpClient.PostAsJsonAsync(nodeUrl + $"/api/leader/flood-id", _id);
-                if (!res.IsSuccessStatusCode)
-                {
-                    return false;
-                }
-                else
-                {
-                    // _logger.LogInformation("newLeaderId {int} is not the same leader id in node {id}", newLeaderId, id);
-                    return true;
-                }
-            });
+            var nodeUrl = await _discoveryService.GetNodeAddress(id);
+            return await _nodeCommunication.FloodIdToNode(nodeUrl, _id);
         }
     }
 }

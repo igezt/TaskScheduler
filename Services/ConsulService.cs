@@ -67,13 +67,13 @@ namespace TaskScheduler.Services
             return serviceIds;
         }
 
-        public async Task<string> GetServiceAddress(int id)
+        public async Task<string> GetNodeAddress(int nodeId)
         {
             // Fetch all registered services
             var services = await _consulClient.Agent.Services();
 
             // Find the service with the matching ID
-            var service = services.Response.Values.FirstOrDefault(s => s.ID == id.ToString());
+            var service = services.Response.Values.FirstOrDefault(s => s.ID == nodeId.ToString());
 
             // If service is found, return its address and port
             if (service != null)
