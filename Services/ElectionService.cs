@@ -63,6 +63,7 @@ namespace TaskScheduler.Services
             var isLeaderOnline = await PollNodeAsync(leaderId);
             if (!isLeaderOnline)
             {
+                _logger.LogWarning("Leader {int} is not online. Re-electing leader.", leaderId);
                 ReElectLeader();
             }
             return isLeaderOnline;

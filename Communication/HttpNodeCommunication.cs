@@ -12,16 +12,17 @@ namespace TaskScheduler.Communication
     {
         private readonly HttpClient _httpClient;
         private readonly AsyncFallbackPolicy<bool> _fallbackPolicy;
+        private readonly ILogger<HttpNodeCommunication> _logger;
 
-        public HttpNodeCommunication(HttpClient httpClient)
+        public HttpNodeCommunication(HttpClient httpClient, ILogger<HttpNodeCommunication> logger)
         {
             _httpClient = httpClient;
-            _fallbackPolicy = Policy
+            _fallbackPolicy = Policy<bool>
                 .Handle<HttpRequestException>()
-                .OrResult<bool>(res => res) // Handle cases where the result is null (e.g., bad request)
                 .FallbackAsync(
                     fallbackValue: false // Fallback value if exception occurs
                 );
+            _logger = logger;
         }
 
         public async Task<bool> FloodIdToNode(string nodeUrl, int id)
@@ -45,13 +46,16 @@ namespace TaskScheduler.Communication
         {
             return await _fallbackPolicy.ExecuteAsync(async () =>
             {
+                // _logger.LogInformation("Polling node at {string}", nodeUrl);
                 var res = await _httpClient.GetAsync(nodeUrl + "/api/heartbeat");
                 if (!res.IsSuccessStatusCode)
                 {
+                    // _logger.LogInformation("Polling node at {string}: Not successful", nodeUrl);
                     return false;
                 }
                 else
                 {
+                    // _logger.LogInformation("Polling node at {string}: Successful", nodeUrl);
                     return true;
                 }
             });
