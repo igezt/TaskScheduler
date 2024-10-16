@@ -1,6 +1,7 @@
 using Consul;
 using TaskScheduler.Communication;
 using TaskScheduler.Interfaces;
+using TaskScheduler.Queue;
 using TaskScheduler.Services;
 using TaskScheduler.Strategy;
 
@@ -14,6 +15,9 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
     // Replace with the appropriate Consul address
     consulConfig.Address = new Uri("http://localhost:8500");
 }));
+
+builder.Services.AddSingleton<KafkaConsumer>();
+builder.Services.AddSingleton<KafkaProducer>();
 
 builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
 builder.Services.AddSingleton<INodeCommunication, HttpNodeCommunication>();
