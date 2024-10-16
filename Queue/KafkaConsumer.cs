@@ -12,6 +12,8 @@ namespace TaskScheduler.Queue
         private readonly string _bootstrapServers;
         private readonly ILogger<KafkaConsumer> _logger;
 
+        private readonly IConsumer<Ignore, string> _consumer;
+
         private readonly string _topic;
 
         public KafkaConsumer(ILogger<KafkaConsumer> logger)
@@ -32,13 +34,12 @@ namespace TaskScheduler.Queue
             };
             _topic = "Tasks";
             _logger = logger;
+            _consumer = new ConsumerBuilder<Ignore, string>(_config).Build();
+            _consumer.Subscribe(_topic);
         }
 
         public void ConsumeMessage()
         {
-            using var consumer = new ConsumerBuilder<Ignore, string>(_config).Build();
-            var message = "Konichiwa from " + new Random().Next().ToString();
-            consumer.Subscribe(_topic);
             CancellationTokenSource cts = new();
             Console.CancelKeyPress += (_, e) =>
             {
@@ -47,23 +48,18 @@ namespace TaskScheduler.Queue
             };
             try
             {
-                while (true)
-                {
-                    var consumeResult = consumer.Consume(cts.Token);
-                    _logger.LogInformation(
-                        "Consumed message '{string}' at: '{string}'.",
-                        consumeResult.Message.Value,
-                        consumeResult.TopicPartitionOffset
-                    );
-                    Task.Delay(TimeSpan.FromSeconds(5));
-                }
+                var consumeResult = _consumer.Consume(cts.Token);
+                _logger.LogInformation(
+                    "Consumed message '{string}' at: '{string}'.",
+                    consumeResult.Message.Value,
+                    consumeResult.TopicPartitionOffset
+                );
             }
             catch (OperationCanceledException)
             {
                 // Ensure the consumer leaves the group cleanly and commits final offsets
-                consumer.Close();
+                _consumer.Close();
             }
-            // producer.Flush();
         }
     }
 }
