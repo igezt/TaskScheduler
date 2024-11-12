@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 using Consul;
 using Polly;
 using Polly.Retry;
-using TaskScheduler.Interfaces;
 
-namespace TaskScheduler.Services
+namespace TaskScheduler.Discovery
 {
-    public class ConsulService : IDiscoveryService
+    public class ConsulDiscoveryService : IDiscoveryService
     {
         private readonly IConsulClient _consulClient;
-        private readonly ILogger<ConsulService> _logger;
+        private readonly ILogger<ConsulDiscoveryService> _logger;
         private readonly AsyncRetryPolicy _retryPolicy;
 
         private readonly string? _id;
@@ -22,7 +21,10 @@ namespace TaskScheduler.Services
         private readonly string _host = "localhost";
         private readonly string _serviceName = "TaskSchedulerNode";
 
-        public ConsulService(IConsulClient consulClient, ILogger<ConsulService> logger)
+        public ConsulDiscoveryService(
+            IConsulClient consulClient,
+            ILogger<ConsulDiscoveryService> logger
+        )
         {
             _consulClient = consulClient;
             _logger = logger;
@@ -69,6 +71,7 @@ namespace TaskScheduler.Services
 
         public async Task<string> GetNodeAddress(int nodeId)
         {
+            _logger.LogInformation("Getting address for node " + nodeId.ToString());
             // Fetch all registered services
             var services = await _consulClient.Agent.Services();
 

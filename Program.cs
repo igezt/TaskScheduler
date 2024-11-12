@@ -1,9 +1,10 @@
 using Consul;
 using TaskScheduler.Communication;
-using TaskScheduler.Interfaces;
+using TaskScheduler.Coordinator;
+using TaskScheduler.Discovery;
+using TaskScheduler.Election;
+using TaskScheduler.Election.Consul;
 using TaskScheduler.Queue;
-using TaskScheduler.Services;
-using TaskScheduler.Strategy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,13 +17,14 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
     consulConfig.Address = new Uri("http://localhost:8500");
 }));
 
-builder.Services.AddSingleton<KafkaConsumer>();
-builder.Services.AddSingleton<KafkaProducer>();
+// builder.Services.AddSingleton<KafkaConsumer>();
+// builder.Services.AddSingleton<KafkaProducer>();
 
-builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
+// builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
 builder.Services.AddSingleton<INodeCommunication, HttpNodeCommunication>();
-builder.Services.AddSingleton<IDiscoveryService, ConsulService>();
-builder.Services.AddSingleton<ElectionService>();
+builder.Services.AddSingleton<IDiscoveryService, ConsulDiscoveryService>();
+builder.Services.AddSingleton<ICoordinator, NodeCoordinator>();
+builder.Services.AddSingleton<IElectionManager, ConsulElectionManager>();
 builder.Services.AddHostedService<ScheduledJobService>();
 
 builder.Services.AddHttpClient();

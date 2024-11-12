@@ -13,7 +13,8 @@ namespace TaskScheduler.Queue
         private readonly ILogger<KafkaProducer> _logger;
 
         private readonly string _topic;
-        private readonly IProducer<Null, string> _producer;
+
+        // private readonly IProducer<Null, string> _producer;
 
         public KafkaProducer(ILogger<KafkaProducer> logger)
         {
@@ -29,14 +30,14 @@ namespace TaskScheduler.Queue
             };
             _topic = "Tasks";
             _logger = logger;
-            _producer = new ProducerBuilder<Null, string>(_config).Build();
+            // _producer = new ProducerBuilder<Null, string>(_config).Build();
         }
 
         public void ProduceMessage()
         {
             var message = "Konichiwa from " + new Random().Next().ToString();
-
-            _producer.Produce(
+            var producer = new ProducerBuilder<Null, string>(_config).Build();
+            producer.Produce(
                 _topic,
                 new Message<Null, string> { Value = message },
                 (deliveryReport) =>

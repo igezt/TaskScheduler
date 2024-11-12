@@ -43,3 +43,28 @@ Currently, since the number of nodes (n) is known, we use the simplest algorithm
 
 Leader election is useful to ensure that even upon failure of the leader node, our system functions properly.
 Note that whenever we start up a new node, we have to run leader election again because the new node's id could be larger than our current leader node's id.
+
+## New Leader Election
+
+### On start up
+
+1. All nodes will attempt to acquire a session and the lock on consul
+2. Only the first node will get access to the KV pair behind the lock
+   a. The first node will leave behind its id in the KV pair
+   b. The first node will then release the lock for all other nodes to enter
+3. All nodes who enter the lock to observe the KV pair will see the id of the first node which is now the leader
+
+### On leader failure
+
+1. All nodes will have a heartbeat to the leader as well as a check to see if the node is still the leader
+   a. The heartbeat is to ensure that nodes will immediately know when the leader node has failed
+   b. The check is if the leader node somehow comes back online in the time between leader failure and leader checking
+   i. Without check: leader failure -> all other nodes deem leader as failed -> new leader is elected -> old leader comes back online -> late node sees old leader is still online -> Split brain will occur
+   ii. With check: leader failure -> all other nodes deem leader as failed -> new leader is elected -> old leader comes back online -> late node sees old leader is still online -> checks if old leader recognizes itself as leader (returns false) -> goes to check KV Pair to find new leader
+2. All idle nodes will then attempt to acquire a session and the lock on consul
+3. First node will become the leader
+4. All nodes that are late to the election will still be able to find the new leader id in the KV pair
+
+### Multiple leaders
+
+Change the KV pair from one leaderId to an array of multiple leaderIds where nodes that enter can leave their id in if there is a space.

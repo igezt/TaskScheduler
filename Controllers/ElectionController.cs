@@ -1,19 +1,20 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskScheduler.Services;
+using TaskScheduler.Coordinator;
+using TaskScheduler.Election;
 
 namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LeaderController : ControllerBase
+    public class ElectionController : ControllerBase
     {
-        private readonly ElectionService _leaderService;
-        private readonly ILogger<LeaderController> _logger;
+        private readonly ICoordinator _coordinator;
+        private readonly ILogger<ElectionController> _logger;
 
-        public LeaderController(ElectionService leaderService, ILogger<LeaderController> logger)
+        public ElectionController(ICoordinator coordinator, ILogger<ElectionController> logger)
         {
-            _leaderService = leaderService;
+            _coordinator = coordinator;
             _logger = logger;
         }
 
@@ -22,7 +23,6 @@ namespace MyApp.Namespace
         public async void Get()
         {
             _logger.LogWarning("Request to execute leader election received.");
-            await _leaderService.FloodId();
         }
 
         // // GET api/<LeaderController>/5
@@ -33,12 +33,17 @@ namespace MyApp.Namespace
         //     return Ok(_leaderService.IsLeader(id));
         // }
 
-        // POST api/<LeaderController>/flood-id
-        [HttpPost("flood-id")]
-        public void UpdateFromFloodId([FromBody] int floodId)
-        {
-            _leaderService.UpdateLeaderId(floodId);
-        }
+        // // POST api/<LeaderController>/flood-id
+        // [HttpPost]
+        // public IActionResult ElectionMessage([FromBody] ElectionMessage electionMessage)
+        // {
+        //     return Ok(
+        //         _coordinator.HandleElectionMessage(
+        //             electionMessage.SenderId,
+        //             electionMessage.Payload
+        //         )
+        //     );
+        // }
 
         // // POST api/<LeaderController>/consensus
         // [HttpPost("consensus")]
