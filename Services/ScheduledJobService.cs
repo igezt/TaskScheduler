@@ -10,27 +10,14 @@ using TaskScheduler.Queue;
 public class ScheduledJobService : BackgroundService
 {
     private readonly ILogger<ScheduledJobService> _logger;
-    private readonly HttpClient _httpClient;
     private readonly ICoordinator _nodeCoordinator;
-
-    // private readonly KafkaConsumer _kafkaConsumer;
-    // private readonly KafkaProducer _kafkaProducer;
 
     private readonly int id;
 
-    public ScheduledJobService(
-        ILogger<ScheduledJobService> logger,
-        HttpClient httpClient,
-        ICoordinator nodeCoordinator
-    // KafkaConsumer kafkaConsumer,
-    // KafkaProducer kafkaProducer
-    )
+    public ScheduledJobService(ILogger<ScheduledJobService> logger, ICoordinator nodeCoordinator)
     {
         _logger = logger;
-        _httpClient = httpClient;
         _nodeCoordinator = nodeCoordinator;
-        // _kafkaConsumer = kafkaConsumer;
-        // _kafkaProducer = kafkaProducer;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,21 +30,7 @@ public class ScheduledJobService : BackgroundService
                 Environment.GetEnvironmentVariable("NODE_ID"),
                 DateTimeOffset.Now
             );
-
-            var isLeader = await _nodeCoordinator.PollOrReElectLeader(stoppingToken);
-
-            if (isLeader)
-            {
-                _logger.LogInformation("I am the leader");
-                // TODO: Produce tasks to Kafka
-                // _kafkaProducer.ProduceMessage();
-            }
-            else
-            {
-                _logger.LogInformation("Leader is online.");
-                // TODO: Receive tasks from Kafka
-                // _kafkaConsumer.ConsumeMessage();
-            }
+            _nodeCoordinator.RunNodeRole(stoppingToken);
 
             // Your scheduled job logic here
             await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken); // Run every 5 seconds.

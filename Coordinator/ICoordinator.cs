@@ -8,24 +8,6 @@ namespace TaskScheduler.Coordinator
 {
     public interface ICoordinator
     {
-        // Event handlers
-        void HandleLeaderDeclared(object sender, LeaderDeclaredEventArgs e);
-        void HandleStateTransition(object sender, StateTransitionEventArgs e);
-
-        // Election-related methods
-        int GetLeaderId();
-        int GetId();
-
-        // void StartElection();
-
-        Task HandleElectionMessage(int senderId, object payload);
-
-        Task<bool> PollOrReElectLeader(CancellationToken token);
-
-        Task<bool> AmILeader(CancellationToken token);
-
-        /** Task processing methods */
-        void ProcessTaskFromQueue();
-        void CompleteTask();
+        void RunNodeRole(CancellationToken token);
     }
 }

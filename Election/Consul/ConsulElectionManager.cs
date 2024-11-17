@@ -35,7 +35,6 @@ namespace TaskScheduler.Election.Consul
         {
             _consul = consulClient;
             _logger = logger;
-            // leaderId = null;
             _nodeCommunication = nodeCommunication;
             if (
                 Environment.GetEnvironmentVariable("NODE_ID") == null
