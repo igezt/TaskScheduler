@@ -68,3 +68,37 @@ Note that whenever we start up a new node, we have to run leader election again 
 ### Multiple leaders
 
 Change the KV pair from one leaderId to an array of multiple leaderIds where nodes that enter can leave their id in if there is a space.
+
+# Requirements for task execution
+
+From here on, tasks refer to the original description of a workable task that a node can run, while jobs refer to the singular instance of a task being executed.
+
+e.g. A task can be SendTelegramMessageTask which sends a telegram message from a bot to all subscribers.
+The task can be then scheduled for a daily execution.
+A job is then the SendTelegramMessageTask that executed on a specific day (e.g. 16/11/2024 11pm).
+
+Let M > N mean that task M has to occur before task N.
+
+- Ability to execute different tasks types
+  - One-time single task execution
+  - Scheduled single task execution
+  - Scheduled and one-time chained tasks
+    - e.g. Cases like A > B, C > D should execute in order where A is before B and C, and B and C execute before D
+  - Scheduled and one-time batched tasks/jobs
+    - e.g. Batching jobs A, B and C ensure that all 3 jobs only execute to completion if all three jobs are executable.
+- Capabilities of tasks
+  - Allow to define retry logic on failure of task
+  - Allow for define retry logic on failure of node
+  - Allow for auto-queuing of scheduled tasks and child tasks upon completion of parent tasks
+  - Able to track tasks based on
+    - Who created a task created and when
+    - Who scheduled a task and when
+    - State of the task **job** (Pending, In progress, Completed)
+    - Which task depends on it (e.g. if A > B > C, then checking C, we can see A and B as its dependencies)
+  - Allow to define retry logic for chained tasks
+    - e.g. If one task fails, should the rest of the tasks be executed or should the task be retried
+
+Current focuses:
+
+- One time tasks
+- Retries of nodes from transient failures
