@@ -10,12 +10,12 @@ namespace TaskScheduler.src.Services.Tasks.Roles
     public class WorkerRole : IRole
     {
         private readonly ITaskQueue _taskQueue;
-        private readonly ILogger<WorkerRole> _logger;
+        private readonly ILogger _logger;
 
-        public WorkerRole(ITaskQueue taskQueue, ILogger<WorkerRole> logger)
+        public WorkerRole(ITaskQueue taskQueue, ILoggerFactory logger)
         {
             _taskQueue = taskQueue;
-            _logger = logger;
+            _logger = logger.CreateLogger("Leader");
         }
 
         public async Task<bool> Perform()

@@ -78,11 +78,11 @@ namespace TaskScheduler.Election.Consul
                 leaderId.HasValue && await _nodeCommunication.PollNode(leaderId.Value);
             if (isLeaderAliveAndExist)
             {
-                _logger.LogInformation(
-                    "{string} {time} An active leader is found; No leadership attempt required.",
-                    Environment.GetEnvironmentVariable("NODE_ID"),
-                    DateTimeOffset.Now
-                );
+                // _logger.LogInformation(
+                //     "{string} An active leader is found; No leadership attempt required.",
+                //     Environment.GetEnvironmentVariable("NODE_ID")
+                // // DateTimeOffset.Now
+                // );
                 return leaderId == _nodeId;
             }
 
@@ -120,9 +120,9 @@ namespace TaskScheduler.Election.Consul
                 if (isLeaderAliveAndExist)
                 {
                     // There is already an active leader, release the lock and return.
-                    _logger.LogInformation(
-                        "An active leader is found; releasing leadership attempt."
-                    );
+                    // _logger.LogInformation(
+                    //     "An active leader is found; releasing leadership attempt."
+                    // );
                     await consulLock.ReleaseLock(token);
                     return leaderId == _nodeId;
                 }
@@ -144,7 +144,7 @@ namespace TaskScheduler.Election.Consul
             return false;
         }
 
-        private async Task<int?> RetrieveLeaderId(CancellationToken token)
+        public async Task<int?> RetrieveLeaderId(CancellationToken token)
         {
             var queryOptions = new QueryOptions { Consistency = ConsistencyMode.Consistent };
             var res = await _consul.KV.Get(_leaderKey, queryOptions, token);

@@ -13,7 +13,7 @@ namespace TaskScheduler.Coordinator
     {
         public readonly int _id;
 
-        private readonly ILogger<NodeCoordinator> _logger;
+        private readonly ILogger _logger;
 
         private readonly IElectionManager _electionManager;
 
@@ -21,13 +21,13 @@ namespace TaskScheduler.Coordinator
         private readonly WorkerRole _worker;
 
         public NodeCoordinator(
-            ILogger<NodeCoordinator> logger,
+            ILoggerFactory logger,
             IElectionManager electionManager,
             LeaderRole leader,
             WorkerRole worker
         )
         {
-            _logger = logger;
+            _logger = logger.CreateLogger("NodeCoordinator");
             _electionManager = electionManager;
             _id = int.Parse(Environment.GetEnvironmentVariable("NODE_ID"));
             _leader = leader;

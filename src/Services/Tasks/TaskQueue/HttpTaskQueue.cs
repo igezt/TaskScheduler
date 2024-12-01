@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using TaskScheduler.Discovery;
+using TaskScheduler.Election;
 
 namespace TaskScheduler.src.Services.Tasks.TaskQueue
 {
@@ -18,17 +19,20 @@ namespace TaskScheduler.src.Services.Tasks.TaskQueue
         private readonly Random _rnd = new();
 
         private readonly ILogger<HttpTaskQueue> _logger;
+        private readonly IElectionManager _electionManager;
 
         public HttpTaskQueue(
             HttpClient httpClient,
             IDiscoveryService discoveryService,
-            ILogger<HttpTaskQueue> logger
+            ILogger<HttpTaskQueue> logger,
+            IElectionManager electionManager
         )
         {
             tasks = new ConcurrentQueue<int>();
             _http = httpClient;
             _discovery = discoveryService;
             _logger = logger;
+            _electionManager = electionManager;
         }
 
         public async Task<int> ConsumeTask()
@@ -40,7 +44,10 @@ namespace TaskScheduler.src.Services.Tasks.TaskQueue
 
         public async Task<bool> PushTask(int taskId)
         {
-            List<int> healthyIds = await _discovery.GetHealthyIds();
+            int? leaderId = await _electionManager.RetrieveLeaderId(new CancellationToken());
+            List<int> healthyIds = (await _discovery.GetHealthyIds())
+                .Where((int id) => id != leaderId)
+                .ToList();
 
             if (healthyIds.Count == 0)
             {

@@ -12,5 +12,6 @@ namespace TaskScheduler.Election
         Task ReleaseLeadership(CancellationToken token);
 
         Task<bool> IsLeader(CancellationToken token);
+        Task<int?> RetrieveLeaderId(CancellationToken token);
     }
 }

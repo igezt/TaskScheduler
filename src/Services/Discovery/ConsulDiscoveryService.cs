@@ -71,7 +71,7 @@ namespace TaskScheduler.Discovery
 
         public async Task<string> GetNodeAddress(int nodeId)
         {
-            _logger.LogInformation("Getting address for node " + nodeId.ToString());
+            // _logger.LogInformation("Getting address for node " + nodeId.ToString());
             // Fetch all registered services
             var services = await _consulClient.Agent.Services();
 
@@ -131,7 +131,7 @@ namespace TaskScheduler.Discovery
             var healthyNodeIds = await GetHealthyIds();
             var isHealthy = healthyNodeIds.Any(nodeId => nodeId == int.Parse(_id));
             // Return the node name, or null if not found
-            _logger.LogWarning("isHealthy: {bool}", isHealthy);
+            // _logger.LogWarning("isHealthy: {bool}", isHealthy);
 
             return isHealthy;
         }
