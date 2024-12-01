@@ -5,6 +5,8 @@ using TaskScheduler.Discovery;
 using TaskScheduler.Election;
 using TaskScheduler.Election.Consul;
 using TaskScheduler.Queue;
+using TaskScheduler.src.Services.Tasks.Roles;
+using TaskScheduler.src.Services.Tasks.TaskQueue;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +23,9 @@ builder.Services.AddSingleton<IConsulClient, ConsulClient>(p => new ConsulClient
 // builder.Services.AddSingleton<KafkaProducer>();
 
 // builder.Services.AddSingleton<IElectionStrategy, MaxIdElectionStrategy>();
+builder.Services.AddSingleton<LeaderRole>();
+builder.Services.AddSingleton<WorkerRole>();
+builder.Services.AddSingleton<ITaskQueue, HttpTaskQueue>();
 builder.Services.AddSingleton<INodeCommunication, HttpNodeCommunication>();
 builder.Services.AddSingleton<IDiscoveryService, ConsulDiscoveryService>();
 builder.Services.AddSingleton<ICoordinator, NodeCoordinator>();
